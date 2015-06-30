@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+<Schema name="anz_unsw_2014s2_g2">
+    <Dimension name="Terminal">
+        <Hierarchy hasAll="true" allMemberName="All Terminals" primaryKey="ID">
+            <Table name="D_TERMINAL"/>
+            <Level name="Terminal Hash" column="TERMINAL_HASH" uniqueMembers="true"/>
+        </Hierarchy>
+        <Hierarchy hasAll="true" name="BySuburb" allMemberName="All Suburbs" primaryKey="ID">
+            <Table name="D_TERMINAL"/>
+            <Level name="Suburb" column="TERMINAL_SUBURB" uniqueMembers="true"/>
+        </Hierarchy>
+    </Dimension>
+    <Dimension name="Customer">
+        <Hierarchy hasAll="true" allMemberName="All Customers" primaryKey="ID">
+            <Table name="D_CUSTOMER"/>
+            <Level name="Customer Hash" column="CUSTOMER_HASH" uniqueMembers="true"/>
+        </Hierarchy>
+        <Hierarchy hasAll="true" name="ByGender" allMemberName="All Genders" primaryKey="ID">
+            <Table name="D_CUSTOMER"/>
+            <Level name="Gender" column="CUSTOMER_GENDER" uniqueMembers="true"/>
+        </Hierarchy>
+        <Hierarchy hasAll="true" name="ByAge" allMemberName="All Ages" primaryKey="ID">
+            <Table name="D_CUSTOMER"/>
+            <Level name="Age" column="CUSTOMER_AGE" uniqueMembers="true"/>
+        </Hierarchy>
+        <Hierarchy hasAll="true" name="ByPostcode" allMemberName="All Postcodes" primaryKey="ID">
+            <Table name="D_CUSTOMER"/>
+            <Level name="Postcode" column="CUSTOMER_POSTCODE" uniqueMembers="true"/>
+        </Hierarchy>
+    </Dimension>
+    <Dimension name="Time" type="TimeDimension">
+        <Hierarchy hasAll="true" allMemberName="All Time" primaryKey="ID">
+            <Table name="D_TIME"/>
+            <Level name="Year" column="THE_YEAR" type="Numeric" uniqueMembers="true" levelType="TimeYears"/>
+            <Level name="Month" column="MONTH_OF_YEAR" type="Numeric" uniqueMembers="false" levelType="TimeMonths"/>
+            <Level name="Day" column="DAY_OF_MONTH" type="Numeric" uniqueMembers="false" levelType="TimeDays"/>
+            <Level name="Hour" column="HOUR_OF_DAY" type="Numeric" uniqueMembers="false" levelType="TimeHours"/>
+        </Hierarchy>
+        <Hierarchy hasAll="true" name="ByQuarter" allMemberName="All Time" primaryKey="ID">
+            <Table name="D_TIME"/>
+            <Level name="Year" column="THE_YEAR" type="Numeric" uniqueMembers="true" levelType="TimeYears"/>
+            <Level name="Quarter" column="QUARTER" type="Numeric" uniqueMembers="false" levelType="TimeQuarters"/>
+            <Level name="Month" column="MONTH_OF_YEAR" type="Numeric" uniqueMembers="false" levelType="TimeMonths"/>
+            <Level name="Day" column="DAY_OF_MONTH" type="Numeric" uniqueMembers="false" levelType="TimeDays"/>
+            <Level name="Hour" column="HOUR_OF_DAY" type="Numeric" uniqueMembers="false" levelType="TimeHours"/>
+        </Hierarchy>
+        <Hierarchy hasAll="true" name="ByWeek" allMemberName="All Time" primaryKey="ID">
+            <Table name="D_TIME"/>
+            <Level name="Year" column="THE_YEAR" type="Numeric" uniqueMembers="true" levelType="TimeYears"/>
+            <Level name="Week" column="WEEK_OF_YEAR" type="Numeric" uniqueMembers="false" levelType="TimeWeeks"/>
+            <Level name="DayOfWeek" column="DAY_OF_WEEK" type="Numeric" uniqueMembers="true" levelType="TimeDays"/>
+            <!-- <Level name="Day" column="DAY_OF_MONTH" type="Numeric" uniqueMembers="false" levelType="TimeDays"/> -->
+            <Level name="Hour" column="HOUR_OF_DAY" type="Numeric" uniqueMembers="false" levelType="TimeHours"/>
+        </Hierarchy>
+    </Dimension>
+
+    <Cube name="ANZ Transaction" defaultMeasure="Transaction Amount">
+        <Table name="F_TRANSACTION"/>
+        
+        <DimensionUsage name="Time" source="Time" foreignKey="D_TIME"/>
+        <DimensionUsage name="Customer" source="Customer" foreignKey="D_CUSTOMER"/>
+        <DimensionUsage name="Terminal" source="Terminal" foreignKey="D_TERMINAL"/>
+        <Dimension name="Account Selection">
+            <Hierarchy hasAll="true">
+                <Level name="Account Selection" column="D_ACCOUNT_TYPE" uniqueMembers="true"/>
+            </Hierarchy>
+        </Dimension>
+        
+        <Measure name="Customer Count" column="D_CUSTOMER" aggregator="distinct-count"/>
+        <Measure name="Transaction Amount" column="T_AMOUNT" aggregator="sum" formatString="Currency"/>
+        <!--<Measure name="AvgTAmount" column="T_AMOUNT" aggregator="avg" formatString="Currency"/>-->
+        <Measure name="Transaction Count" column="T_COUNT" aggregator="sum" />
+
+        <CalculatedMember
+            name="Transaction Average Amount"
+            dimension="Measures">
+            <Formula>[Measures].[Transaction Amount] / [Measures].[Transaction Count]</Formula>
+        </CalculatedMember>
+        <CalculatedMember
+            name="TerminalMedianTAmount"
+            dimension="Measures">
+            <Formula>Median([Terminal].[All Terminals].Children, [Measures].[Transaction Amount])</Formula>
+            <!-- <CalculatedMemberProperty name="FORMAT_STRING" value="$#,##0.00"/> -->
+        </CalculatedMember>
+        <CalculatedMember
+            name="TerminalSuburbMedianTAmount"
+            dimension="Measures">
+            <Formula>Median([Terminal.BySuburb].[All Suburbs].Children, [Measures].[Transaction Amount])</Formula>
+            <!-- <CalculatedMemberProperty name="FORMAT_STRING" value="$#,##0.00"/> -->
+        </CalculatedMember>
+        <CalculatedMember
+            name="CustomerMedianTAmount"
+            dimension="Measures">
+            <Formula>Median([Customer].[All Customers].Children, [Measures].[Transaction Amount])</Formula>
+            <!-- <CalculatedMemberProperty name="FORMAT_STRING" value="$#,##0.00"/> -->
+        </CalculatedMember>
+        <CalculatedMember
+            name="CustomerPostcodeMedianTAmount"
+            dimension="Measures">
+            <Formula>Median([Customer.ByPostcode].[All Postcodes].Children, [Measures].[Transaction Amount])</Formula>
+            <!-- <CalculatedMemberProperty name="FORMAT_STRING" value="$#,##0.00"/> -->
+        </CalculatedMember>
+
+
+        <!--
+        <CalculatedMember
+            name="Profit"
+            dimension="Measures">
+            <Formula>[Measures].[Store Sales] - [Measures].[Store Cost]</Formula>
+            <CalculatedMemberProperty name="FORMAT_STRING" value="$#,##0.00"/>
+            <CalculatedMemberProperty name="MEMBER_ORDINAL" value="4"/>
+        </CalculatedMember>
+        <CalculatedMember
+            name="Profit last Period"
+            dimension="Measures"
+            formula="COALESCEEMPTY((Measures.[Profit], [Time].[Time].PREVMEMBER),    Measures.[Profit])"
+            visible="false">
+            <CalculatedMemberProperty name="MEMBER_ORDINAL" value="5"/>
+        </CalculatedMember>
+        <Measure name="Org Salary" column="salary_paid" aggregator="sum"
+            formatString="Currency"/>
+        <Measure name="Count" column="employee_id" aggregator="count"
+            formatString="#,#"/>
+        <CalculatedMember name="Employee Salary" dimension="Measures"
+            formatString="Currency"
+            formula="([Employees].currentmember.datamember, [Measures].[Org Salary])"/>
+        <CalculatedMember name="Avg Salary" dimension="Measures"
+            formatString="Currency"
+            formula="[Measures].[Org Salary]/[Measures].[Number of Employees]"/>
+        -->
+    </Cube>
+</Schema>
+

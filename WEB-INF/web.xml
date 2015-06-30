@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+    <display-name>ANZ-UNSW-2014s2: Data Analytics</display-name>
+    <description/>
+
+    <servlet>
+        <servlet-name>ANZ Simple OLAP</servlet-name>
+        <servlet-class>au.edu.unsw.cse.comp9323.anz.analytics.ANZSimpleOLAPServlet</servlet-class>
+	
+        <init-param>
+            <param-name>olap4j_driver_class</param-name>
+            <param-value>mondrian.olap4j.MondrianOlap4jDriver</param-value>
+        </init-param>
+	
+        <init-param>
+            <param-name>olap4j_connection_string</param-name>
+            <param-value>jdbc:mondrian:JdbcDrivers=org.apache.derby.jdbc.EmbeddedDriver;JdbcUser=sa;JdbcPassword=sa;PoolNeeded=false;Jdbc=jdbc:derby:classpath:/foodmart;Catalog=res:anz_unsw_2014s2_g2.xml</param-value>
+            <!--
+            <param-value>jdbc:xmla:Server=http://localhost:8081/mondrian-embedded/xmla</param-value>
+            -->
+        </init-param>
+	
+        <init-param>
+            <param-name>olap4j_cube_name</param-name>
+            <param-value>ANZ Transaction</param-value>
+        </init-param>
+	
+        <init-param>
+            <param-name>keenio_project_id</param-name>
+            <param-value>54085861709a391177000006</param-value>
+        </init-param>
+	
+        <init-param>
+            <param-name>keenio_read_key</param-name>
+            <param-value>3ac1a533c60bbe25d22db2e0882efadfbb4cc80b19f516b27db52b1fce26eb508e7e42fe47beef724bbb374251329cc24e1615cc8283d8a0ecb9159b54b5403e80605184ead917f43b552761bd2a1f05b36a91f6aaac06acf4428bc4810a9f33e75c8d5475d7bc8dc4f40e23634737f1</param-value>
+        </init-param>
+	
+        <init-param>
+            <param-name>keenio_event_collection</param-name>
+            <param-value>ANZ</param-value>
+        </init-param>
+	
+    </servlet>
+
+    <servlet>
+        <servlet-name>MDXQueryServlet</servlet-name>
+        <servlet-class>mondrian.web.servlet.MdxQueryServlet</servlet-class>
+        <init-param>
+            <param-name>connectString</param-name>
+            <param-value>Provider=mondrian;Jdbc='jdbc:derby:classpath:/foodmart';Catalog=/WEB-INF/classes/anz_unsw_2014s2_g2.xml;JdbcDrivers=org.apache.derby.jdbc.EmbeddedDriver;JdbcUser=sa;JdbcPassword=sa;PoolNeeded=false;</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
+        <servlet-name>MondrianXmlaServlet</servlet-name>
+        <servlet-class>mondrian.xmla.impl.MondrianXmlaServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ANZ Simple OLAP</servlet-name>
+        <url-pattern>/anz_olap/*</url-pattern>
+    </servlet-mapping>
+  
+    <servlet-mapping>
+        <servlet-name>MDXQueryServlet</servlet-name>
+        <url-pattern>/mdxquery</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>MondrianXmlaServlet</servlet-name>
+        <url-pattern>/xmla</url-pattern>
+    </servlet-mapping>
+
+    <welcome-file-list>
+        <welcome-file>anz_olap.html</welcome-file>
+    </welcome-file-list>
+
+</web-app>
+

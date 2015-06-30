@@ -1,0 +1,237 @@
+<!doctype html>
+<html>
+    <head>
+        <title>ANZ Insights - Analytics</title>
+        <style>
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            h1 {
+                font-size: 30px;
+                text-align: center;
+                font-family: Arial;
+                margin-top: 20px;
+                margin-bottom: 2px;
+            }
+            h2 {
+                font-size: 20px;
+                text-align: center;
+                font-family: 'Courier New';
+                margin-top: 2px;
+                margin-bottom: 20px;
+            }
+            .page_width {
+                width: 1000px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            #demo_area {
+                margin: 10px 0;
+                padding: 10px 0;
+                background-color: rgb(179, 179, 255);
+            }
+            #demo_area .space_bar {
+                clear: both;
+            }
+            #container_chart {
+                width: 500px;
+                height : 400px;
+                float: left;
+            }
+            #container_response {
+                float: left;
+            }
+            #container_response textarea {
+                width : 490px;
+                height : 400px;
+                border-width: 1px;
+                padding: 4px;
+                background-color: rgb(208, 208, 243);
+            }
+            #container_apis {
+                clear: both;
+            }
+        </style>
+        <script src="Chart.min.js"></script>
+        <script type="text/javascript">
+
+            function renderOlap4jBar(arr) {
+                var labels = [];
+                var datasets = {};
+                for (var item in arr) {
+                    var m = arr[item]["measure"];
+                    var v = arr[item]["value"];
+                    if (m in datasets) {
+                        datasets[m]["data"].push(v);
+                    } else {
+                        datasets[m] = {
+                            data: [v],
+                            label: m,
+                            fillColor: "rgba(220,220,220,0.5)",
+                            strokeColor: "rgba(220,220,220,0.8)",
+                            highlightFill: "rgba(220,220,220,0.75)",
+                            highlightStroke: "rgba(220,220,220,1)"
+                        };
+                    }
+                    delete arr[item]["value"];
+                    delete arr[item]["measure"];
+                    var l = JSON.stringify(arr[item]);
+                    labels.push(l);
+                }
+                var d = [];
+                for (var m in datasets)
+                    d.push(datasets[m]);
+
+                if (window.mychart)
+                    window.mychart.destroy();
+                var ctx = document.getElementById("canvas").getContext("2d");
+                window.mychart = new Chart(ctx).Bar(
+                        {"labels": labels, "datasets": datasets},
+                {responsive: true, barShowStroke: false});
+
+                return true;
+            }
+
+            function renderOlap4jLine(arr) {
+                var labels = [];
+                var datasets = {};
+                for (var item in arr) {
+                    var m = arr[item]["measure"];
+                    var v = arr[item]["value"];
+                    if (m in datasets) {
+                        datasets[m]["data"].push(v);
+                    } else {
+                        datasets[m] = {
+                            data: [v],
+                            label: m,
+                            fillColor: "rgba(220,220,220,0.2)",
+                            strokeColor: "rgba(220,220,220,1)",
+                            pointColor: "rgba(220,220,220,1)",
+                            pointStrokeColor: "#fff",
+                            pointHighlightFill: "#fff",
+                            pointHighlightStroke: "rgba(220,220,220,1)"
+                        };
+                    }
+                    delete arr[item]["value"];
+                    delete arr[item]["measure"];
+                    var l = JSON.stringify(arr[item]);
+                    labels.push(l);
+                }
+                var d = [];
+                for (var m in datasets)
+                    d.push(datasets[m]);
+                var ctx = document.getElementById("canvas").getContext("2d");
+                return new Chart(ctx).Line(
+                        {"labels": labels, "datasets": datasets},
+                {responsive: true});
+            }
+
+            function parseOlap4jResp(r) {
+                document.getElementById("response").value = r.responseText;
+                // var o = eval(r.responseText);
+                var o = JSON.parse(r.responseText);
+                // if ("result" in o) renderOlap4jLine(o["result"]);
+                // else renderOlap4jLine(o);
+                if ("result" in o)
+                    renderOlap4jBar(o["result"]);
+                else
+                    renderOlap4jBar(o);
+            }
+
+            function renderOlap4j(api) {
+                var r = new XMLHttpRequest();
+                r.onreadystatechange = function () {
+                    if (r.readyState == 4) {
+                        if (r.status == 200)
+                            parseOlap4jResp(r);
+                        else if (r.status != 200)
+                            alert("status: " + r.status);
+                    }
+                };
+                r.open("POST", "anz_olap" + api, true);
+                r.send();
+            }
+        </script>
+    </head>
+    <body>
+        <div>
+
+            <div class="page_width">
+                <h1>ANZ Insights - UNSW/e-Enterprise Project 2014s2</h1>
+                <h2>Group 2: Data Analytics</h2>
+            </div>
+
+            <div id="demo_area">
+                <div class="page_width">
+                    <div id="container_chart">
+                        <div>
+                            <canvas id="canvas" width="500" height="400"></canvas>
+                        </div>
+                    </div>
+                    <div id="container_response"><textarea id="response"></textarea></div>
+                    <div class="space_bar"></div>
+                </div>
+            </div>
+
+            <div class="page_width">
+                <ul>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.terminal');">tx.amount/by.terminal</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.terminal?hour=1393646444219');">tx.amount/by.terminal?hour=1393646444219 (the hour that the timestamp belongs to)</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.terminal:suburb');">tx.amount/by.terminal:suburb</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.terminal:suburb?customer.gender=F');">tx.amount/by.terminal:suburb?customer.gender=F</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.customer');">tx.amount/by.customer</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.customer:age');">tx.amount/by.customer:age</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.customer:gender');">tx.amount/by.customer:gender</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.customer:gender?account_type=1');">tx.amount/by.customer:gender?account_type=1</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.customer:postcode');">tx.amount/by.customer:postcode</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.account_type');">tx.amount/by.account_type</a>
+                    </li>
+
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.terminal:suburb/by.customer:age');">tx.amount/by.terminal:suburb/by.customer:age</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.terminal:suburb/by.customer:gender');">tx.amount/by.terminal:suburb/by.customer:gender</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.terminal:suburb/by.customer:postcode');">tx.amount/by.terminal:suburb/by.customer:postcode</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.terminal:suburb/by.account_type');">tx.amount/by.terminal:suburb/by.account_type</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.account_type/by.customer:age');">tx.amount/by.account_type/by.customer:age</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.account_type/by.customer:gender');">tx.amount/by.account_type/by.customer:gender</a>
+                    </li>
+                    <li>
+                        <a href="javascript:renderOlap4j('/olap4j/global/tx.amount/by.account_type/by.customer:postcode');">tx.amount/by.account_type/by.customer:postcode</a>
+                    </li>
+                </ul>
+                <a href="adhoc.jsp">adhoc mdx query</a>
+            </div>
+
+        </div>
+    </body>
+</html>
